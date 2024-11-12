@@ -17,6 +17,7 @@ const App = () => {
     return amt * rate;
   };
 
+  //This is a demo function I created for the UI. replace it with the actual calls to the smart contract.
   const handleAmountChange = (e) => {
     const amt = e.target.value;
     setAmount(amt);
@@ -105,7 +106,6 @@ const App = () => {
             </p>
           </div>
 
-          {/* Stake Button */}
           <button
             onClick={handleStakeNow}
             className="w-full mt-8 py-3 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition duration-300"
@@ -116,7 +116,7 @@ const App = () => {
         </div>
       </div>
 
-      {/* Modal for Staking Summary */}
+      {/* Modal for displaying Staking Summary */}
       <Modal
         isOpen={showSummary}
         onClose={closeModal}
