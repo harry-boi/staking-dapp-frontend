@@ -4,7 +4,7 @@ const NavBar = ({ wallet, setWallet }) => {
   return (
     <nav className="bg-gray-900 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
-        <div className="text-2xl font-bold text-indigo-500">codeToken</div>
+        <div className="text-2xl font-bold text-indigo-500">CodeToken</div>
 
         <div className="w-full flex justify-end">
           <ul>
