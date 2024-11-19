@@ -8,6 +8,8 @@ import Modal from "./components/Modal";
 import StakeDetails from "./components/StakeDetails";
 import {getTotalTokensStaked,getAdmin,calculateReward,stake,getStakedBalance,getAllStakes} from "./utils/utils";
 
+
+
 const App = () => {
   const [amount, setAmount] = useState();
   const [stakingPeriod, setStakingPeriod] = useState("30");
@@ -18,10 +20,12 @@ const App = () => {
   const [userStakes,setUserStakes] = useState([]);
   const [adminAddress, setAdminAddress] = useState(null);
   const weekInSeconds = 604800;
+  const [rewardsEarned, setRewardsEarned] = useState(null);
+
 
   useEffect(() => {
     async function fetchTotalTokensStaked() {
-      const {tokensStaked} = await getTotalTokensStaked();
+      const { tokensStaked } = await getTotalTokensStaked();
       setTotalTokensStaked(tokensStaked);
     }
     async function fetchAdmin() {
@@ -116,12 +120,12 @@ const App = () => {
     setShowSummary(false);
   };
 
-  return (
-    wallet == adminAddress ? 
+  return wallet == adminAddress ? (
     <div className="bg-gray-900 min-h-screen">
       <NavBar wallet={wallet} setWallet={setWallet} />
       <div className="text-white">ADMIN ROLE</div>
-      </div> :
+    </div>
+  ) : (
     <div className="bg-gray-900 min-h-screen">
       <NavBar wallet={wallet} setWallet={setWallet} />
       <div className="w-full sm:w-[100%]]">
@@ -142,8 +146,7 @@ const App = () => {
       ) : (
         <div>No stakes available</div>
       )}
-      </div>
-
+    </div>
       <div className="flex w-screen mt-8 items-center justify-center">
         <div className="w-3/4 p-8 bg-gray-800 rounded-lg shadow-lg text-white">
           <div className="w-full flex flex-col items-start">
