@@ -28,10 +28,10 @@ const Modal = ({
             <strong>Amount Staked:</strong> {amount} Tokens
           </p>
           <p>
-            <strong>Staking Period:</strong> {stakingPeriod} Days
+            <strong>Staking Period:</strong> {stakingPeriod} Weeks
           </p>
           <p>
-            <strong>Estimated Rewards:</strong> {estimatedRewards.toFixed(2)}{" "}
+            <strong>Estimated Rewards:</strong> {estimatedRewards}{" "}
             Tokens
           </p>
         </div>

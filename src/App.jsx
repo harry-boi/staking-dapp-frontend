@@ -1,19 +1,23 @@
 import React, { useState,useEffect } from "react";
+import { ethers } from "ethers";
 import "./App.css";
 import NavBar from "./components/NavBar";
 import Card from "./components/Card";
 import { FaUnlock } from "react-icons/fa";
 import Modal from "./components/Modal";
-import {getTotalTokensStaked,getAdmin} from "./utils/utils";
+import StakeDetails from "./components/StakeDetails";
+import {getTotalTokensStaked,getAdmin,calculateReward,stake,getStakedBalance,getAllStakes} from "./utils/utils";
 
 const App = () => {
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState();
   const [stakingPeriod, setStakingPeriod] = useState("30");
   const [estimatedRewards, setEstimatedRewards] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
   const [wallet, setWallet] = useState(null);
   const [totalTokensStaked,setTotalTokensStaked] = useState(0);
+  const [userStakes,setUserStakes] = useState([]);
   const [adminAddress, setAdminAddress] = useState(null);
+  const weekInSeconds = 604800;
 
   useEffect(() => {
     async function fetchTotalTokensStaked() {
@@ -24,34 +28,89 @@ const App = () => {
       const admin = await getAdmin();
       setAdminAddress(admin);
     }
-    fetchTotalTokensStaked();
     fetchAdmin();
+    fetchTotalTokensStaked();
   },[]);
 
-  
+  useEffect(() => {
+    async function fetchStakes() {
+      const userStakes = await getAllStakes(wallet);
 
+      setUserStakes(userStakes);
+      console.log(userStakes)
+      console.log(userStakes[0][0])
+    }
+    fetchStakes();
+  },[wallet]);
 
-  const calculateRewards = (amt, period) => {
-    const rate = period === "30" ? 0.05 : period === "60" ? 0.1 : 0.15;
-    return amt * rate;
-  };
-
-  //This is a demo function I created for the UI. replace it with the actual calls to the smart contract.
   const handleAmountChange = (e) => {
     const amt = e.target.value;
     setAmount(amt);
-    setEstimatedRewards(calculateRewards(amt, stakingPeriod));
   };
 
   const handlePeriodChange = (e) => {
     const period = e.target.value;
     setStakingPeriod(period);
-    setEstimatedRewards(calculateRewards(amount, period));
   };
 
-  const handleStakeNow = () => {
-    setShowSummary(true);
+  useEffect(() => {
+    async function handleEstimatedRewards() {
+      // Validate inputs
+      if (!amount || !stakingPeriod) {
+        console.warn("Amount or stakingPeriod is not defined. Skipping calculation.");
+        return;
+      }
+  
+      try {
+        const estimatedRewards = await calculateReward(amount, stakingPeriod * weekInSeconds);
+        setEstimatedRewards(estimatedRewards);
+        console.log("Estimated Rewards:", estimatedRewards);
+      } catch (error) {
+        console.error("Error in handleEstimatedRewards:", error);
+      }
+    }
+  
+    handleEstimatedRewards();
+  }, [amount, stakingPeriod]);
+  
+
+
+  const handleStake = async () => {
+    // Check if amount is valid
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+      alert("Please enter a valid amount");
+      return;
+    }
+  
+    // Check if stakingPeriod is valid
+    if (!stakingPeriod || isNaN(stakingPeriod) || parseInt(stakingPeriod) <= 0) {
+      alert("Please select a valid staking period");
+      return;
+    }
+  
+    // Ensure weekInSeconds is defined
+    if (!weekInSeconds || isNaN(weekInSeconds)) {
+      console.error("Invalid weekInSeconds value");
+      return;
+    }
+  
+    try {
+      // Calculate staking duration
+      const stakingDuration = stakingPeriod * weekInSeconds;
+      console.log(amount)
+      console.log(stakingDuration)
+  
+      // Call the stake function
+      const status = await stake(amount, stakingDuration);
+  
+      alert(status);
+      setShowSummary(true);
+    } catch (error) {
+      console.error("Stake failed:", error);
+      alert("An error occurred during staking");
+    }
   };
+  
 
   const closeModal = () => {
     setShowSummary(false);
@@ -66,21 +125,23 @@ const App = () => {
     <div className="bg-gray-900 min-h-screen">
       <NavBar wallet={wallet} setWallet={setWallet} />
       <div className="w-full sm:w-[100%]]">
-          <Card title="Total Tokens Staked" value={totalTokensStaked} svg={<FaUnlock />} />
-        </div>
-      <div className="flex flex-wrap justify-center w-2/3 space-x-2 m-auto mt-10 gap-4">
-        <div className="w-full sm:w-[48%]">
-          <Card title="Your Stake" value="21.0M" svg={<FaUnlock />} />
-        </div>
-        <div className="w-full sm:w-[48%]">
-          <Card title="Rewards Earned" value="0.0" svg={<FaUnlock />} />
-        </div>
-        <div className="w-full sm:w-[48%]">
-          <Card title="APR" value="0.0" svg={<FaUnlock />} />
-        </div>
-        <div className="w-full sm:w-[48%]">
-          <Card title="Time Left" value="0.0" svg={<FaUnlock />} />
-        </div>
+          <Card title="Total Tokens Staked" value={ethers.formatUnits(totalTokensStaked, 18)} svg={<FaUnlock />} />
+      </div>
+      <div className="w-full sm:w-[100%]]">
+      {userStakes.length > 0 ? (
+        userStakes.map((stake, index) => (
+          <StakeDetails
+          key={index} // Unique key for each element
+          amountStaked={ethers.formatUnits(stake[0], 18)} // Convert `amountStaked` to a readable value
+          stakingDuration={`${stake[1].toString() / 604800} weeks`} // Assuming `604800` is the seconds in a week
+          stakingStartTime={new Date(stake[2].toString() * 1000).toLocaleString()} // Convert UNIX timestamp to readable format
+          apr={`${stake[3]}%`} // Convert APR to a percentage
+          stakeRewards={ethers.formatUnits(stake[4], 18)} // Format rewards to token decimals
+          />
+        ))
+      ) : (
+        <div>No stakes available</div>
+      )}
       </div>
 
       <div className="flex w-screen mt-8 items-center justify-center">
@@ -116,9 +177,9 @@ const App = () => {
               value={stakingPeriod}
               onChange={handlePeriodChange}
             >
-              <option value="30">30 Days - 5% APY</option>
-              <option value="60">60 Days - 10% APY</option>
-              <option value="90">90 Days - 15% APY</option>
+              <option value="" disabled>Please Select Duration</option>
+              <option value="1">1 week - 3% APR</option>
+              <option value="4">4 weeks - 12% APR</option>
             </select>
           </div>
 
@@ -127,16 +188,16 @@ const App = () => {
             <p className="text-lg font-semibold text-gray-300">
               Estimated Rewards:{" "}
               <span className="text-indigo-400">
-                {estimatedRewards > 0 ? estimatedRewards.toFixed(2) : "0.00"}{" "}
+                {estimatedRewards > 0 ? estimatedRewards : "0.00"}{" "}
                 Tokens
               </span>
             </p>
           </div>
 
           <button
-            onClick={handleStakeNow}
+            onClick={handleStake}
             className="w-full mt-8 py-3 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition duration-300"
-            disabled={!amount}
+            disabled={!amount && !stakingPeriod}
           >
             Stake Now
           </button>

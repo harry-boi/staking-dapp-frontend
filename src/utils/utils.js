@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { contractAddress, contractAbi } from "./contractRefs";
+import { contractAddress,tokenContractAddress, contractAbi,tokenContractAbi } from "./contractRefs";
 
 export let signer = null;
 export let provider;
@@ -22,14 +22,54 @@ export async function getAdmin() {
     return admin.toString();
 }
 
+// Approve tokens for a spender contract
+export async function approveTokens(tokenContractAddress, spenderAddress, amountToStake) {
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum); // Connect to MetaMask
+      const signer = await provider.getSigner(); // Get the signer (user's wallet)
+      
+      // Token contract instance
+      const tokenContract = new ethers.Contract(tokenContractAddress, tokenContractAbi, signer);
+
+      // Check current allowance
+      const ownerAddress = await signer.getAddress();
+      const currentAllowance = await tokenContract.allowance(ownerAddress, spenderAddress);
+      const formattedAllowance = ethers.formatUnits(currentAllowance, 18);
+
+      // Compare allowance with required amount
+      if (parseFloat(formattedAllowance) >= parseFloat(amountToStake)) {
+        console.log("Sufficient allowance, no need to approve");
+        return true;
+      }
+  
+      // Parse the amount to token decimals (assuming 18 decimals)
+      const amountToApprove = ethers.parseUnits(amountToStake.toString(), 18);
+  
+      // Call approve
+      const approveTx = await tokenContract.approve(spenderAddress, amountToApprove);
+      console.log("Transaction submitted:", approveTx);
+  
+      // Wait for the transaction to be mined
+      await approveTx.wait();
+      console.log("Approval successful:", approveTx);
+  
+      return true;
+    } catch (error) {
+      console.error("Approval failed:", error);
+      throw error;
+    }
+}
+
 export async function stake(amountToStake,duration) {
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
     const contract = new ethers.Contract(contractAddress,contractAbi,signer);
-    //might need to convert duration to seconds equivalent
-    const stake = await contract.stake(amountToStake,duration);
+    await approveTokens(tokenContractAddress, contractAddress, amountToStake);
+    const stakeAmount = ethers.parseUnits(amountToStake.toString(), 18); // Assuming 18 decimals
+    const stakingDuration = BigInt(duration); // Convert to BigInt
+    const stake = await contract.stake(stakeAmount,stakingDuration);
     console.log("Stake:",stake);
-    return `${amountToStake} tokens staked for ${duration} weeks`;
+    return `${amountToStake} tokens staked for ${duration/604800} weeks`;
 }
 
 export async function claimReward(stakeIndex) {
@@ -46,7 +86,8 @@ export async function calculateReward(amountToStake,duration) {
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
     const contract = new ethers.Contract(contractAddress,contractAbi,signer);
-    //might need to convert duration to seconds equivalent
+    const stakeAmount = ethers.parseUnits(amountToStake.toString(), 18); // Assuming 18 decimals
+    const stakingDuration = BigInt(duration); // Convert to BigInt
     const reward = await contract.calculateReward(amountToStake,duration);
     console.log("Reward:",reward);
     return reward.toString();
@@ -58,6 +99,14 @@ export async function getStakeStatus() {
     const stakeStatus = await contract.isStakingPaused();
     console.log("Stake status:",stakeStatus);
     return stakeStatus;
+}
+
+export async function getAllStakes(user) {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const contract = new ethers.Contract(contractAddress,contractAbi,provider);
+    const userStakes = await contract.getAllStakes(user);
+    console.log("user stakes:",userStakes);
+    return userStakes;
 }
 
 export async function checkTimeLeftToClaim(user,stakeIndex) {
