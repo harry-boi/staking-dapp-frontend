@@ -6,7 +6,7 @@ import Card from "./components/Card";
 import { FaUnlock } from "react-icons/fa";
 import Modal from "./components/Modal";
 import StakeDetails from "./components/StakeDetails";
-import {getTotalTokensStaked,getAdmin,calculateReward,stake,getStakedBalance,getAllStakes} from "./utils/utils";
+import {getTotalTokensStaked,getAdmin,calculateReward,stake,getStakedBalance,getAllStakes,checkTimeLeftToClaim} from "./utils/utils";
 
 
 
@@ -20,7 +20,7 @@ const App = () => {
   const [userStakes,setUserStakes] = useState([]);
   const [adminAddress, setAdminAddress] = useState(null);
   const weekInSeconds = 604800;
-  const [rewardsEarned, setRewardsEarned] = useState(null);
+  const [daysLeft, setDaysLeft] = useState({});
 
 
   useEffect(() => {
@@ -41,10 +41,15 @@ const App = () => {
       const userStakes = await getAllStakes(wallet);
 
       setUserStakes(userStakes);
-      console.log(userStakes)
-      console.log(userStakes[0][0])
     }
     fetchStakes();
+    if (userStakes.length > 0) {
+      userStakes.forEach((_, index) => {
+        if (daysLeft[index] === undefined) {
+          handleFetchDays(index); // Fetch only if not already fetched
+        }
+      });
+    }
   },[wallet]);
 
   const handleAmountChange = (e) => {
@@ -114,6 +119,11 @@ const App = () => {
       alert("An error occurred during staking");
     }
   };
+
+  const handleFetchDays = async (index) => {
+    const days = await checkTimeLeftToClaim(wallet, index); // Assume this fetches the correct value
+    setDaysLeft((prev) => ({ ...prev, [index]: days })); // Update daysLeft for this index
+  };
   
 
   const closeModal = () => {
@@ -128,10 +138,11 @@ const App = () => {
   ) : (
     <div className="bg-gray-900 min-h-screen">
       <NavBar wallet={wallet} setWallet={setWallet} />
-      <div className="w-full sm:w-[100%]]">
+      <div className="flex flex-col gap-3">
+      <div className="w-full ">
           <Card title="Total Tokens Staked" value={ethers.formatUnits(totalTokensStaked, 18)} svg={<FaUnlock />} />
       </div>
-      <div className="w-full sm:w-[100%]]">
+      <div className="w-full flex flex-col gap-3">
       {userStakes.length > 0 ? (
         userStakes.map((stake, index) => (
           <StakeDetails
@@ -141,12 +152,14 @@ const App = () => {
           stakingStartTime={new Date(stake[2].toString() * 1000).toLocaleString()} // Convert UNIX timestamp to readable format
           apr={`${stake[3]}%`} // Convert APR to a percentage
           stakeRewards={ethers.formatUnits(stake[4], 18)} // Format rewards to token decimals
+          daysLeft={daysLeft[index]}
           />
         ))
       ) : (
         <div>No stakes available</div>
       )}
     </div>
+      </div>
       <div className="flex w-screen mt-8 items-center justify-center">
         <div className="w-3/4 p-8 bg-gray-800 rounded-lg shadow-lg text-white">
           <div className="w-full flex flex-col items-start">

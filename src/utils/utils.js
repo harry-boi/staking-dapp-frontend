@@ -113,10 +113,9 @@ export async function checkTimeLeftToClaim(user,stakeIndex) {
     const provider = new ethers.BrowserProvider(window.ethereum);
     const contract = new ethers.Contract(contractAddress,contractAbi,provider);
     const timeLeft = await contract.checkTimeLeftToUnlock(user,stakeIndex);
-    console.log("Time left:",timeLeft);
-    return {
-        timeLeft: timeLeft.toString(),
-    }
+    const daysLeft = convertDays(timeLeft).toString();
+    console.log("Days left:",daysLeft);
+    return daysLeft;
 }
 
 export async function getUserStakeAprPercentage(user,stakeIndex) {
@@ -199,6 +198,11 @@ export function convertSecondsToJsDate(durationInSeconds) {
     console.log("Duration date:", durationDate.toLocaleString()); // logs the date in a human-readable format
     
     return durationDate;
+}
+
+export function convertDays(durationInSeconds) {
+    const days = Math.floor(durationInSeconds.toString() / 86400); // 1 day = 86400 seconds
+    return `${days} days left`;
 }
 
 export function convertSeconds(durationInSeconds) {
