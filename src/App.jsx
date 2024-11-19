@@ -1,10 +1,10 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import NavBar from "./components/NavBar";
 import Card from "./components/Card";
 import { FaUnlock } from "react-icons/fa";
 import Modal from "./components/Modal";
-import {getTotalTokensStaked,getAdmin} from "./utils/utils";
+import { getTotalTokensStaked, getAdmin } from "./utils/utils";
 
 const App = () => {
   const [amount, setAmount] = useState("");
@@ -12,12 +12,13 @@ const App = () => {
   const [estimatedRewards, setEstimatedRewards] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
   const [wallet, setWallet] = useState(null);
-  const [totalTokensStaked,setTotalTokensStaked] = useState(0);
+  const [totalTokensStaked, setTotalTokensStaked] = useState(0);
   const [adminAddress, setAdminAddress] = useState(null);
+  const [rewardsEarned, setRewardsEarned] = useState(null);
 
   useEffect(() => {
     async function fetchTotalTokensStaked() {
-      const {tokensStaked} = await getTotalTokensStaked();
+      const { tokensStaked } = await getTotalTokensStaked();
       setTotalTokensStaked(tokensStaked);
     }
     async function fetchAdmin() {
@@ -26,10 +27,9 @@ const App = () => {
     }
     fetchTotalTokensStaked();
     fetchAdmin();
-  },[]);
 
-  
-
+    const rewards = async () => {};
+  }, []);
 
   const calculateRewards = (amt, period) => {
     const rate = period === "30" ? 0.05 : period === "60" ? 0.1 : 0.15;
@@ -57,17 +57,21 @@ const App = () => {
     setShowSummary(false);
   };
 
-  return (
-    wallet == adminAddress ? 
+  return wallet == adminAddress ? (
     <div className="bg-gray-900 min-h-screen">
       <NavBar wallet={wallet} setWallet={setWallet} />
       <div className="text-white">ADMIN ROLE</div>
-      </div> :
+    </div>
+  ) : (
     <div className="bg-gray-900 min-h-screen">
       <NavBar wallet={wallet} setWallet={setWallet} />
       <div className="w-full sm:w-[100%]]">
-          <Card title="Total Tokens Staked" value={totalTokensStaked} svg={<FaUnlock />} />
-        </div>
+        <Card
+          title="Total Tokens Staked"
+          value={totalTokensStaked}
+          svg={<FaUnlock />}
+        />
+      </div>
       <div className="flex flex-wrap justify-center w-2/3 space-x-2 m-auto mt-10 gap-4">
         <div className="w-full sm:w-[48%]">
           <Card title="Your Stake" value="21.0M" svg={<FaUnlock />} />
