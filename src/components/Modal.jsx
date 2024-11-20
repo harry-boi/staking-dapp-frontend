@@ -8,6 +8,7 @@ const Modal = ({
   amount,
   stakingPeriod,
   estimatedRewards,
+  handleStake,
 }) => {
   if (!isOpen) return null;
 
@@ -31,8 +32,7 @@ const Modal = ({
             <strong>Staking Period:</strong> {stakingPeriod} Weeks
           </p>
           <p>
-            <strong>Estimated Rewards:</strong> {estimatedRewards}{" "}
-            Tokens
+            <strong>Estimated Rewards:</strong> {estimatedRewards} Tokens
           </p>
         </div>
 
@@ -43,7 +43,10 @@ const Modal = ({
           >
             Cancel
           </button>
-          <button className="w-full py-2 rounded-lg bg-indigo-500 text-white font-semibold transition-transform duration-300 hover:scale-105">
+          <button
+            onClick={handleStake}
+            className="w-full py-2 rounded-lg bg-indigo-500 text-white font-semibold transition-transform duration-300 hover:scale-105"
+          >
             Proceed
           </button>
         </div>
