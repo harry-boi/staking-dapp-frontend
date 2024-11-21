@@ -174,7 +174,7 @@ const App = () => {
   };
 
   const handleUpdateApr = async () => {
-    const status = await updateAPR(newAprDuration, newAprPercentage);
+    const status = await updateAPR(newAprDuration * weekInSeconds, newAprPercentage);
     alert(status);
   };
 
