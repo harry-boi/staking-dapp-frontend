@@ -13,6 +13,10 @@ import {
   stake,
   getAllStakes,
   checkTimeLeftToClaim,
+  updateAPR,
+  pauseStaking,
+  resumeStaking,
+  getStakeStatus,
 } from "./utils/utils";
 
 const App = () => {
@@ -26,6 +30,9 @@ const App = () => {
   const [adminAddress, setAdminAddress] = useState(null);
   const weekInSeconds = 604800;
   const [daysLeft, setDaysLeft] = useState({});
+  const [newAprPercentage, setNewAprPercentage] = useState();
+  const [newAprDuration, setNewAprDuration] = useState();
+  const [stakeStatus, setStakeStatus] = useState();
 
   useEffect(() => {
     async function fetchTotalTokensStaked() {
@@ -46,6 +53,12 @@ const App = () => {
 
       setUserStakes(userStakes);
     }
+    async function fetchStakeStatus() {
+      const stakeStatus = await getStakeStatus();
+
+      setStakeStatus(stakeStatus);
+    }
+    fetchStakeStatus();
     fetchStakes();
     if (userStakes.length > 0) {
       userStakes.forEach((_, index) => {
@@ -54,7 +67,8 @@ const App = () => {
         }
       });
     }
-  }, [wallet]);
+  }, [wallet,stakeStatus]);
+
 
   const handleAmountChange = (e) => {
     const amt = e.target.value;
@@ -137,6 +151,33 @@ const App = () => {
     setDaysLeft((prev) => ({ ...prev, [index]: days })); // Update daysLeft for this index
   };
 
+  const handleAprChange = (e) => {
+    const apr = e.target.value;
+    setNewAprPercentage(apr);
+  };
+
+  const handleDurationChange = (e) => {
+    const duration = e.target.value;
+    setNewAprDuration(duration);
+  };
+
+  const handlePauseStaking = async () => {
+    const status = await pauseStaking();
+    setStakeStatus(true);
+    alert(status);
+  };
+
+  const handleResumeStaking = async () => {
+    const status = await resumeStaking();
+    setStakeStatus(false);
+    alert(status);
+  };
+
+  const handleUpdateApr = async () => {
+    const status = await updateAPR(newAprDuration, newAprPercentage);
+    alert(status);
+  };
+
   const closeModal = () => {
     setShowSummary(false);
   };
@@ -149,14 +190,32 @@ const App = () => {
     setShowSummary(!showSummary);
   };
 
-  return wallet == adminAddress ? (
+  return (
     <div className="bg-gray-900 min-h-screen">
-      <NavBar wallet={wallet} setWallet={setWallet} />
-      <div className="text-white">ADMIN ROLE</div>
+    <NavBar wallet={wallet} setWallet={setWallet} />
+    {wallet == adminAddress ? (
+    <div> 
+      <div className="text-white font-semibold text-2xl mb-3">ADMIN ROLE</div>
+      <div className="w-full ">
+      <div className="bg-gray-800 shadow-md rounded-lg p-6 w-full mb-2">
+      <div className="text-white font-semibold text-left mb-1">UPDATE APR:</div>
+        <div className="flex gap-3 items-center">
+        <input type="text" name="new-apr" id="new-apr" placeholder="New Apr" value={newAprPercentage} onChange={handleAprChange} className="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-indigo-500 focus:outline-none" />
+        <input type="number" name="duration-apr" id="duration-apr" placeholder="New Duration" value={newAprDuration} onChange={handleDurationChange} className="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-indigo-500 focus:outline-none" />
+        <button onClick={handleUpdateApr} className="bg-indigo-500 rounded-lg self-end p-3 w-full cursor-pointer font-semibold">Update Apr</button>
+        </div>
+      </div>
+      </div>
+      <div className="bg-gray-800 shadow-md rounded-lg mt-4 p-6 w-full">
+      <div className="text-white font-semibold text-left mb-1">STAKE STATUS: {stakeStatus ? `Paused` : `Active`}</div>
+        <div className="flex justify-center items-center gap-3">
+        <button onClick={handlePauseStaking} className="bg-indigo-500 rounded-lg self-end p-3 w-full cursor-pointer font-semibold">Pause Staking</button>
+        <button onClick={handleResumeStaking} className="bg-indigo-500 rounded-lg self-end p-3 w-full cursor-pointer font-semibold">Resume Staking</button>
+        </div>
+      </div>
     </div>
   ) : (
-    <div className="bg-gray-900 min-h-screen">
-      <NavBar wallet={wallet} setWallet={setWallet} />
+    <div>
       <div className="flex flex-col gap-3">
         <div className="w-full ">
           <Card
@@ -256,6 +315,9 @@ const App = () => {
         handleStake={handleStake}
       />
     </div>
+  )
+  }
+  </div>
   );
 };
 
