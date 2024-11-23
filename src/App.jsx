@@ -21,7 +21,7 @@ import {
 
 const App = () => {
   const [amount, setAmount] = useState();
-  const [stakingPeriod, setStakingPeriod] = useState("30");
+  const [stakingPeriod, setStakingPeriod] = useState("");
   const [estimatedRewards, setEstimatedRewards] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
   const [wallet, setWallet] = useState(null);
@@ -192,29 +192,13 @@ const App = () => {
 
   return (
     <div className="bg-gray-900 min-h-screen">
-    <NavBar wallet={wallet} setWallet={setWallet} />
-    {wallet == adminAddress ? (
-    <div> 
-      <div className="text-white font-semibold text-2xl mb-3">ADMIN ROLE</div>
-      <div className="w-full ">
-      <div className="bg-gray-800 shadow-md rounded-lg p-6 w-full mb-2">
-      <div className="text-white font-semibold text-left mb-1">UPDATE APR:</div>
-        <div className="flex gap-3 items-center">
-        <input type="text" name="new-apr" id="new-apr" placeholder="New Apr" value={newAprPercentage} onChange={handleAprChange} className="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-indigo-500 focus:outline-none" />
-        <input type="number" name="duration-apr" id="duration-apr" placeholder="New Duration" value={newAprDuration} onChange={handleDurationChange} className="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-indigo-500 focus:outline-none" />
-        <button onClick={handleUpdateApr} className="bg-indigo-500 rounded-lg self-end p-3 w-full cursor-pointer font-semibold">Update Apr</button>
-        </div>
+     <NavBar wallet={wallet} setWallet={setWallet} />
+    {adminAddress === null ? (
+      // Show a loading spinner or placeholder while fetching the admin address
+      <div className="bg-gray-900 min-h-screen flex items-center justify-center">
+        <div className="text-white text-2xl font-bold">Loading...</div>
       </div>
-      </div>
-      <div className="bg-gray-800 shadow-md rounded-lg mt-4 p-6 w-full">
-      <div className="text-white font-semibold text-left mb-1">STAKE STATUS: {stakeStatus ? `Paused` : `Active`}</div>
-        <div className="flex justify-center items-center gap-3">
-        <button onClick={handlePauseStaking} className="bg-indigo-500 rounded-lg self-end p-3 w-full cursor-pointer font-semibold">Pause Staking</button>
-        <button onClick={handleResumeStaking} className="bg-indigo-500 rounded-lg self-end p-3 w-full cursor-pointer font-semibold">Resume Staking</button>
-        </div>
-      </div>
-    </div>
-  ) : (
+    ) : wallet !== adminAddress ? (
     <div>
       <div className="flex flex-col gap-3">
         <div className="w-full ">
@@ -240,7 +224,7 @@ const App = () => {
               />
             ))
           ) : (
-            <div>No stakes available</div>
+            <div className="mt-4 text-white text-2xl font-semibold">No stakes available</div>
           )}
         </div>
       </div>
@@ -314,6 +298,28 @@ const App = () => {
         estimatedRewards={estimatedRewards}
         handleStake={handleStake}
       />
+    </div>
+  ) :
+  (
+    <div> 
+      <div className="text-white font-semibold text-2xl mb-3">ADMIN ROLE</div>
+      <div className="w-full ">
+      <div className="bg-gray-800 shadow-md rounded-lg p-6 w-full mb-2">
+      <div className="text-white font-semibold text-left mb-1">UPDATE APR:</div>
+        <div className="flex gap-3 items-center">
+        <input type="text" name="new-apr" id="new-apr" placeholder="New Apr" value={newAprPercentage} onChange={handleAprChange} className="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-indigo-500 focus:outline-none" />
+        <input type="number" name="duration-apr" id="duration-apr" placeholder="New Duration" value={newAprDuration} onChange={handleDurationChange} className="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-indigo-500 focus:outline-none" />
+        <button onClick={handleUpdateApr} className="bg-indigo-500 rounded-lg self-end p-3 w-full cursor-pointer font-semibold">Update Apr</button>
+        </div>
+      </div>
+      </div>
+      <div className="bg-gray-800 shadow-md rounded-lg mt-4 p-6 w-full">
+      <div className="text-white font-semibold text-left mb-1">STAKE STATUS: {stakeStatus ? `Paused` : `Active`}</div>
+        <div className="flex justify-center items-center gap-3">
+        <button onClick={handlePauseStaking} className="bg-indigo-500 rounded-lg self-end p-3 w-full cursor-pointer font-semibold">Pause Staking</button>
+        <button onClick={handleResumeStaking} className="bg-indigo-500 rounded-lg self-end p-3 w-full cursor-pointer font-semibold">Resume Staking</button>
+        </div>
+      </div>
     </div>
   )
   }
