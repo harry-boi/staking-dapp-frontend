@@ -27,7 +27,7 @@ const App = () => {
   const [wallet, setWallet] = useState(null);
   const [totalTokensStaked, setTotalTokensStaked] = useState(0);
   const [userStakes, setUserStakes] = useState([]);
-  const [adminAddress, setAdminAddress] = useState(null);
+  const [adminAddress, setAdminAddress] = useState("0xE38467773B31EA89d366e122E950148BBcBDc21A");
   const weekInSeconds = 604800;
   const [daysLeft, setDaysLeft] = useState({});
   const [newAprPercentage, setNewAprPercentage] = useState();
@@ -193,10 +193,10 @@ const App = () => {
   return (
     <div className="bg-gray-900 min-h-screen">
      <NavBar wallet={wallet} setWallet={setWallet} />
-    {adminAddress === null ? (
-      // Show a loading spinner or placeholder while fetching the admin address
+    {wallet === null ? (
+      // Show a placeholder while fetching the admin address
       <div className="bg-gray-900 min-h-screen flex items-center justify-center">
-        <div className="text-white text-2xl font-bold">Loading...</div>
+        <div className="text-white text-2xl font-bold">Please connect metamask wallet</div>
       </div>
     ) : wallet !== adminAddress ? (
     <div>
